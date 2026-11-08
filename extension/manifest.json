@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "简历自动投递助手（MVP）",
+  "version": "0.3.19",
+  "description": "扫描投递页面输入框，按规则匹配结构化简历字段并自动填充，人在环路确认后由用户提交。",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "简历自动投递助手",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "shared/profile-store.js",
+        "content/debug.js",
+        "content/config.js",
+        "content/scanner.js",
+        "content/filler.js",
+        "content/matcher.js",
+        "content/main.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

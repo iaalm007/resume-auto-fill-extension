@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>投递表单（标签与输入框分离版）· 本地测试</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+         background: #f5f6f8; margin: 0; padding: 32px; color: #1f2430; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .note { color: #6b7280; font-size: 13px; line-height: 1.7; margin-bottom: 20px; }
+  .note code { background: #eceef2; padding: 1px 5px; border-radius: 4px; }
+  .card { background: #fff; border: 1px solid #e3e6ec; border-radius: 10px; padding: 20px 22px; }
+  .form-item { display: flex; align-items: flex-start; margin-bottom: 18px; }
+  .form-item > .label { flex: 0 0 108px; text-align: right; padding-right: 12px;
+                       font-size: 14px; line-height: 32px; color: #374151; }
+  .form-item > .label .req { color: #e5484d; margin-right: 3px; }
+  .control { flex: 1; min-width: 0; }
+  input[type=text], textarea, select {
+    width: 100%; box-sizing: border-box; padding: 6px 10px; font-size: 14px;
+    line-height: 20px; border: 1px solid #d7dbe3; border-radius: 6px;
+    background: #fff; outline: none; font-family: inherit; color: inherit;
+  }
+  textarea { min-height: 78px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { border-color: #4c7dff; }
+  .options { display: flex; gap: 18px; line-height: 32px; font-size: 14px; }
+  .options label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .opts-box > div { display: flex; align-items: center; gap: 6px; line-height: 30px; font-size: 14px; }
+  .divider { height: 1px; background: #eef0f4; margin: 6px 0 20px; }
+  button { padding: 8px 20px; font-size: 14px; border-radius: 6px; border: 1px solid #d7dbe3;
+           background: #fff; cursor: pointer; font-family: inherit; }
+  .primary { background: #2f6bff; border-color: #2f6bff; color: #fff; }
+  .actions { margin-top: 6px; display: flex; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>投递表单（标签与输入框分离版）</h1>
+  <p class="note">
+    这个页面专门模拟真实招聘系统里最常见、也最容易让扫描失败的结构：<br />
+    <b>label 是一个单独的 <code>&lt;div&gt;</code>，和输入框之间隔了包装层</b>，
+    输入框自己只有 <code>placeholder="请输入"</code> —— 没有任何语义信息。<br />
+    如果扫描结果里字段名是「姓名 / 手机号码 / …」而不是「请输入」，说明标签推断是对的。
+  </p>
+
+  <div class="card">
+    <form onsubmit="return false">
+      <!-- 结构一：label 与 .control 同级，input 在 .control 内再套一层 -->
+      <div class="form-item">
+        <div class="label"><span class="req">*</span>姓名</div>
+        <div class="control"><div><input type="text" id="f1" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="form-item">
+        <div class="label"><span class="req">*</span>手机号码</div>
+        <div class="control"><div><input type="text" id="f2" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">电子邮箱</div>
+        <div class="control"><div><input type="text" id="f3" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">出生日期</div>
+        <div class="control"><div><input type="text" id="f4" placeholder="请选择" /></div></div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">身份证号</div>
+        <div class="control"><div><input type="text" id="f5" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">现居住地</div>
+        <div class="control"><div><input type="text" id="f6" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 单选组：问题文本在 .label，选项各自包裹在 label 里 -->
+      <div class="form-item">
+        <div class="label">性别</div>
+        <div class="control">
+          <div class="options">
+            <label><input type="radio" name="gender" value="男" />男</label>
+            <label><input type="radio" name="gender" value="女" />女</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 单选组：选项文本在 input 之后的兄弟节点 -->
+      <div class="form-item">
+        <div class="label">政治面貌</div>
+        <div class="control">
+          <div class="opts-box">
+            <div><input type="radio" name="political" value="群众" /><span>群众</span></div>
+            <div><input type="radio" name="political" value="中共党员" /><span>中共党员</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">所在城市</div>
+        <div class="control">
+          <select id="f7">
+            <option value="">请选择</option>
+            <option value="北京">北京</option>
+            <option value="上海">上海</option>
+            <option value="深圳">深圳</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-item">
+        <div class="label">自我评价</div>
+        <div class="control"><div><textarea id="f8" placeholder="请输入"></textarea></div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 反面对照：这个字段页面上确实没有标签，扫描结果应当显示「请输入」并带「标签未识别」 -->
+      <div class="form-item">
+        <div class="control"><div><input type="text" id="f9" placeholder="请输入" /></div></div>
+      </div>
+
+      <div class="actions">
+        <button type="button">取消</button>
+        <button type="button" class="primary" onclick="alert('本地测试页，不会真的提交')">提交</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

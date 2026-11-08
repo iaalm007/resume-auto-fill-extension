@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>简历自动投递助手</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">RJ</span>
+      <div class="brand-text">
+        <h1>简历自动投递助手</h1>
+        <p id="page-title" class="subtitle">正在连接页面…</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="ver" class="ver"></span>
+      <button id="btn-diag" class="btn ghost mini" title="复制诊断信息（扫描结果 + 日志 + 未匹配字段的 HTML），方便反馈问题">诊断</button>
+    </div>
+  </header>
+
+  <div class="resume-bar">
+    <span class="resume-label">使用简历</span>
+    <select id="resume-select"></select>
+    <span id="resume-warn" class="resume-warn" hidden>资料为空</span>
+  </div>
+
+  <section class="stats">
+    <div class="stat">
+      <span id="stat-total" class="num">0</span>
+      <span class="cap">识别字段</span>
+    </div>
+    <div class="stat">
+      <span id="stat-matched" class="num accent">0</span>
+      <span class="cap">命中匹配</span>
+    </div>
+    <div class="stat">
+      <span id="stat-fillable" class="num good">0</span>
+      <span class="cap">待填充</span>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <button id="btn-scan" class="btn ghost">重新扫描</button>
+    <label class="switch">
+      <input type="checkbox" id="only-matched" />
+      <span>仅看已匹配</span>
+    </label>
+  </div>
+
+  <div id="ai-strip" class="ai-strip" hidden>
+    <span class="spinner"></span>
+    <span id="ai-strip-text">AI 分析中…</span>
+  </div>
+
+  <!-- AI 的常态说明：没启用 / 没认出来 / 补了几个，都要看得见，不能静默什么都不做 -->
+  <div id="ai-note" class="ai-note" hidden>
+    <span id="ai-note-text"></span>
+    <button id="btn-ai-run" class="btn primary mini" hidden>让 AI 判断</button>
+    <button id="btn-ai-note" class="btn ghost mini" hidden>去设置</button>
+  </div>
+
+  <main id="list" class="list">
+    <div class="empty">点击「重新扫描」识别当前页面的表单字段</div>
+  </main>
+
+  <div id="add-bar" class="add-bar" hidden>
+    <span id="add-bar-text" class="add-bar-text"></span>
+    <div class="add-bar-actions">
+      <button id="btn-add-save" class="btn primary small">补全到简历</button>
+      <button id="btn-add-skip" class="btn ghost small">不用</button>
+    </div>
+  </div>
+
+  <!-- 一句话说清「现在能填几个、为什么不是全部」—— 不解释的话，用户只会觉得功能坏了 -->
+  <div id="fill-hint" class="ai-note" hidden><span id="fill-hint-text"></span></div>
+
+  <footer class="footer">
+    <button id="btn-options" class="btn ghost small">资料设置</button>
+    <button id="btn-undo" class="btn ghost small" hidden>撤销填写</button>
+    <button id="btn-fill" class="btn primary">自动填写</button>
+  </footer>
+
+  <div id="diag-overlay" class="diag-overlay" hidden>
+    <p class="diag-hint">
+      自动复制没成功。请在下面全选（Ctrl/Cmd + A）再复制（Ctrl/Cmd + C）：
+    </p>
+    <textarea id="diag-box" readonly spellcheck="false"></textarea>
+    <button id="btn-diag-close" class="btn ghost small">关闭</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="shared/profile-store.js"></script>
+  <script src="shared/ai-config.js"></script>
+  <script src="shared/bg-message.js"></script>
+  <!-- 后台不可用时用它在弹窗里直连（功能和后台一致，只是少了跨标签页的统一限流） -->
+  <script src="shared/ai-map.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

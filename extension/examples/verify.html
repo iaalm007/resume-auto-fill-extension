@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>感知 / 匹配 / 填充 验证台</title>
+<style>
+  :root {
+    --bg:#0f1117; --panel:#171a22; --panel2:#1d212b; --line:#2a2f3a;
+    --text:#e6e9ef; --muted:#8b93a5; --good:#4ade80; --warn:#fbbf24; --err:#f87171; --accent:#7aa2ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:22px; background:var(--bg); color:var(--text);
+    font:13px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
+  h1 { font-size:17px; margin:0 0 4px; }
+  h2 { font-size:13px; margin:24px 0 8px; color:var(--accent); font-weight:600; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
+  @media (max-width:1000px){ .cols { grid-template-columns:minmax(0,1fr); } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  button { font:inherit; padding:5px 12px; border-radius:7px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:#2c4a8f; border-color:#3a5cae; }
+  .stat { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+  .stat b { display:block; font-size:19px; }
+  .stat span { color:var(--muted); font-size:11px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { text-align:left; padding:5px 7px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; white-space:nowrap; }
+  code { background:#242938; padding:1px 5px; border-radius:4px; font-size:11px;
+    font-family:ui-monospace,Consolas,monospace; }
+  .ok { color:var(--good); } .bad { color:var(--err); } .ai { color:var(--accent); }
+  .warn { color:var(--warn); }
+  pre { background:#12151c; border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    overflow:auto; max-height:340px; font-size:11px; margin:0; white-space:pre-wrap; word-break:break-all; }
+  .pill { font-size:10px; padding:1px 7px; border-radius:999px; border:1px solid var(--line); }
+  .pill.ok { color:var(--good); border-color:#1f4d3c; background:#14281f; }
+  .pill.bad { color:var(--err); border-color:#4c2626; background:#2a1a1a; }
+  .pill.ai { color:var(--accent); border-color:#2b3c63; background:#16203a; }
+  .pill.warn { color:var(--warn); border-color:#4d3a1a; background:#2a2214; }
+  /* ---- 被测表单（浅色，模拟真实站点）---- */
+  #form-host { background:#fff; color:#1f2430; border-radius:8px; padding:14px 16px; }
+  #form-host .fi { display:flex; margin-bottom:12px; align-items:flex-start; }
+  #form-host .lb { flex:0 0 96px; text-align:right; padding-right:10px; font-size:13px; line-height:30px; color:#374151; }
+  #form-host .ctl { flex:1; min-width:0; }
+  #form-host input[type=text], #form-host textarea, #form-host select {
+    width:100%; padding:5px 9px; font:inherit; font-size:13px; line-height:20px;
+    border:1px solid #d7dbe3; border-radius:6px; color:inherit; background:#fff; }
+  #form-host textarea { min-height:60px; }
+  #form-host .opts { display:flex; gap:16px; line-height:30px; font-size:13px; }
+  #form-host .opts label { display:inline-flex; align-items:center; gap:5px; }
+  #form-host .box > div { display:flex; align-items:center; gap:6px; line-height:28px; }
+  #form-host .err-tip { color:#e5484d; font-size:12px; margin-top:3px; }
+  #form-host .fi.form-item--focus .lb { color:#2f6bff; }
+  #form-host .fi.form-item--has-value .lb { color:#0a8f5b; }
+  #form-host input.el-input__inner--error { border-color:#e5484d; }
+  #form-host input.el-input__inner--focused { border-color:#2f6bff; }
+  .hint { color:var(--muted); font-size:11px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>感知 / 匹配 / 填充 验证台</h1>
+  <p class="sub">
+    这一页加载的是扩展里**正在用的那几个真实文件**（<code>content/config.js</code>、
+    <code>scanner.js</code>、<code>matcher.js</code>、<code>filler.js</code>），
+    对下面这批真实表单结构跑一遍。不需要装扩展，也不需要点任何东西 —— 打开即跑。
+  </p>
+
+  <div class="bar">
+    <button id="btn-rerun" class="primary">重新扫描</button>
+    <button id="btn-mutate">模拟前端状态变化后再扫</button>
+    <button id="btn-fill">执行填充（走真实 filler）</button>
+    <button id="btn-reset">清空表单</button>
+    <span class="hint" id="engine"></span>
+  </div>
+  <div class="bar">
+    <span class="hint">指纹稳定性：</span>
+    <span id="fp-status" class="warn">还没比对</span>
+    <span class="hint">
+      同一个字段在两次扫描之间指纹必须一致 —— 指纹是 AI 缓存的键，
+      一变缓存就失效，每次扫描都会白问一次模型（这就是配额被打满的典型原因）。
+    </span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2 style="margin-top:0">① 被测表单（照真实招聘系统的结构写的）</h2>
+      <div id="form-host"></div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">② 扫描与匹配结果</h2>
+        <div class="stat">
+          <div><b id="s-total">0</b><span>识别字段</span></div>
+          <div><b id="s-matched" class="ok">0</b><span>规则命中</span></div>
+          <div><b id="s-weak" class="warn">0</b><span>标签不可信</span></div>
+          <div><b id="s-verdict">–</b><span>结论</span></div>
+        </div>
+        <table id="tbl"><thead><tr>
+          <th>#</th><th>抓到的标签</th><th>来源</th><th>匹配到</th><th>置信度</th><th>指纹</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h2 style="margin-top:0">③ 会发给模型的内容（规则没命中的字段）</h2>
+        <p class="hint" style="margin-top:-2px">
+          这段就是完整的请求体里跟字段有关的部分。判断依据只有标签和 DOM 结构 ——
+          输入框里已经填的内容、简历内容都不在里面。
+        </p>
+        <pre id="payload"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2 style="margin-top:0">④ 填充结果</h2>
+    <table id="fres"><thead><tr>
+      <th>字段</th><th>填入的值</th><th>结果</th>
+    </tr></thead><tbody><tr><td colspan="3" class="hint">点上面的「执行填充」</td></tr></tbody></table>
+    <p class="hint" id="rollback"></p>
+  </div>
+</div>
+
+<script src="../content/config.js"></script>
+<script src="../content/scanner.js"></script>
+<script src="../content/matcher.js"></script>
+<script src="../content/filler.js"></script>
+<script>
+/* ------------------------------------------------------------------ 被测表单 */
+const FORM_HTML = `
+<div class="fi"><div class="lb">姓名</div>
+  <div class="ctl"><div><input id="v1" type="text" placeholder="请输入" /></div></div></div>
+
+<div class="fi"><div class="lb">手机号码</div>
+  <div class="ctl"><div><input id="v2" type="text" placeholder="请输入" /></div></div></div>
+
+<div class="fi"><div class="lb">电子邮箱</div>
+  <div class="ctl"><div><input id="v3" type="text" placeholder="请输入" /></div></div></div>
+
+<div class="fi"><div class="lb">出生日期</div>
+  <div class="ctl"><div><input id="v4" type="text" placeholder="请选择" /></div></div></div>
+
+<div class="fi"><div class="lb">身份证号</div>
+  <div class="ctl"><div><input id="v5" type="text" placeholder="请输入" /></div></div></div>
+
+<div class="fi"><div class="lb">现居住地</div>
+  <div class="ctl"><div><input id="v6" type="text" placeholder="请输入" /></div></div></div>
+
+<!-- 词典缺口：不含任何现有关键词，规则命中不了，留给 AI -->
+<div class="fi"><div class="lb">紧急联络方式</div>
+  <div class="ctl"><div><input id="v7" type="text" placeholder="请输入" /></div></div></div>
+
+<div class="fi"><div class="lb">性别</div>
+  <div class="ctl"><div class="opts">
+    <label><input type="radio" name="sex" value="男" />男</label>
+    <label><input type="radio" name="sex" value="女" />女</label>
+  </div></div></div>
+
+<div class="fi"><div class="lb">政治面貌</div>
+  <div class="ctl"><div class="box">
+    <div><input type="radio" name="pol" value="群众" /><span>群众</span></div>
+    <div><input type="radio" name="pol" value="中共党员" /><span>中共党员</span></div>
+  </div></div></div>
+
+<div class="fi"><div class="lb">所在城市</div>
+  <div class="ctl"><select id="v8">
+    <option value="">请选择</option><option>北京</option><option>上海</option><option>深圳</option>
+  </select></div></div>
+
+<div class="fi"><div class="lb">自我评价</div>
+  <div class="ctl"><div><textarea id="v9" placeholder="请输入"></textarea></div></div></div>
+
+<!-- 受控组件：不派发 input 事件的话，400ms 后会被「框架」回滚 -->
+<div class="fi"><div class="lb">微信号</div>
+  <div class="ctl"><div><input id="v10" type="text" placeholder="请输入" /></div></div></div>
+
+<!-- 页面上压根没有标签 -->
+<div class="fi"><div class="ctl"><div><input id="v11" type="text" placeholder="请输入" value="13900001111" /></div></div></div>
+
+<!-- 污染对照：电话绝不能被标成「姓名」 -->
+<div class="fi"><div class="lb">姓名</div>
+  <div class="ctl"><div><input id="v12" type="text" placeholder="请输入" /></div></div></div>
+<div class="fi"><div class="lb">电话</div>
+  <div class="ctl"><div><input id="v13" type="text" placeholder="请输入" /></div></div></div>
+`;
+
+/* 期望值：用来判定这一页到底跑对没有 */
+const EXPECT = {
+  v1: '姓名', v2: '手机号码', v3: '电子邮箱', v4: '出生日期', v5: '身份证号',
+  v6: '现居住地', v7: '紧急联络方式', v9: '自我评价', v12: '姓名', v13: '电话'
+};
+const EXPECT_PATH = {
+  v1: 'basic.name', v2: 'basic.phone', v3: 'basic.email', v4: 'basic.birthday',
+  v5: 'basic.idCard', v6: 'basic.location', v9: 'selfEvaluation',
+  v7: null, v11: null, v12: 'basic.name', v13: 'basic.phone'
+};
+/* 简历里用来演示填充的数据（只用于本地演示，不会被发出去） */
+const DEMO_RESUME = {
+  basic: { name: '张三', phone: '13800002222', email: 'zhangsan@example.com',
+    birthday: '1998-03-12', idCard: '11010119980312001X', location: '北京',
+    gender: '男', wechat: 'zhangsan_wx', politicalStatus: '群众', political: '' },
+  skills: ['JavaScript', 'Python'], selfEvaluation: '五年后端开发经验，熟悉分布式系统。'
+};
+
+const $ = (s) => document.querySelector(s);
+let lastPlan = [];
+let baselineFps = null;   // 第一次扫描的指纹，用来比对稳定性
+
+function buildForm() {
+  $('#form-host').innerHTML = FORM_HTML;
+  // 伪 React 受控组件
+  const el = document.getElementById('v10');
+  let committed = '';
+  el.addEventListener('input', () => { committed = el.value; });
+  setInterval(() => { if (el.value !== committed) el.value = committed; }, 400);
+}
+
+function valueOfPath(path) {
+  return String(path).split('.').reduce((o, k) => (o == null ? undefined : o[k]), DEMO_RESUME);
+}
+
+/* ------------------------------------------------------------------ 扫描 + 匹配 */
+function runScan() {
+  const SCAN = window.__RJ_SCANNER__, M = window.__RJ_MATCHER__, CFG = window.__RJ_CONFIG__;
+  const fields = SCAN.scanAll();
+  const tb = $('#tbl tbody');
+  tb.innerHTML = '';
+
+  let matched = 0, weak = 0, wrong = 0;
+  const aiPayload = [];
+  const fps = {};
+
+  lastPlan = fields.map((f) => {
+    const m = M.matchField(f, CFG.fieldRules);
+    const entry = SCAN.getEntry(f.id);
+    const el = entry && (entry.el || (entry.group && entry.group[0]));
+    const key = el && el.id;
+
+    // 判定
+    let verdict = '', cls = '';
+    if (key && EXPECT[key] !== undefined) {
+      if (f.labelText !== EXPECT[key]) { verdict = '标签不对'; cls = 'bad'; wrong++; }
+      else if (EXPECT_PATH[key] !== undefined && EXPECT_PATH[key] !== (m ? m.path : null)) {
+        verdict = '匹配不对'; cls = 'bad'; wrong++;
+      }
+    }
+
+    if (m) matched++; else aiPayload.push(f);
+    if (f.labelSource === 'placeholder' || f.labelSource === 'none') weak++;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + (key || '—') + '</td>' +
+      '<td>' + (f.labelText ? esc(f.labelText) : '<span class="hint">(空)</span>') +
+        (verdict ? ' <span class="pill bad">' + verdict + '</span>' : '') + '</td>' +
+      '<td>' + (f.labelSource === 'placeholder' || f.labelSource === 'none'
+        ? '<span class="pill warn">' + f.labelSource + '</span>'
+        : '<code>' + esc(f.labelSource) + '</code>') + '</td>' +
+      '<td>' + (m ? '<code>' + esc(m.path) + '</code>' : '<span class="pill ai">留给 AI</span>') + '</td>' +
+      '<td>' + (m ? Math.round(m.confidence * 100) + '%' : '—') + '</td>' +
+      '<td class="hint">' + esc(String(f.fingerprint || '').replace(/^fp_/, '')) + '</td>';
+    tb.appendChild(tr);
+    if (key) fps[key] = f.fingerprint;
+
+    return {
+      id: f.id, field: f, el: el, path: m ? m.path : null,
+      value: m ? valueOfPath(m.path) : '', label: f.labelText, key: key
+    };
+  });
+
+  $('#s-total').textContent = fields.length;
+  $('#s-matched').textContent = matched;
+  $('#s-weak').textContent = weak;
+  const verdictEl = $('#s-verdict');
+  if (wrong === 0) {
+    verdictEl.textContent = '全对';
+    verdictEl.className = 'ok';
+  } else {
+    verdictEl.textContent = wrong + ' 处不对';
+    verdictEl.className = 'bad';
+  }
+  $('#engine').textContent = '规则 ' + CFG.fieldRules.length + ' 条 · 字段 ' + fields.length +
+    ' 个 · 规则命中 ' + matched + ' 个 · 留给 AI ' + aiPayload.length + ' 个';
+
+  renderPayload(aiPayload);
+  compareFingerprints(fps);
+}
+
+/** 指纹是 AI 缓存的键：两次扫描之间必须一致，否则每次扫描都要重新问模型 */
+function compareFingerprints(fps) {
+  const el = $('#fp-status');
+  if (!baselineFps) {
+    baselineFps = fps;
+    el.textContent = '已记录基线（' + Object.keys(fps).length + ' 个字段）—— 再扫一次或点「模拟前端状态变化」即可比对';
+    el.className = 'hint';
+    return;
+  }
+  const changed = Object.keys(baselineFps).filter((k) => fps[k] !== baselineFps[k]);
+  if (changed.length) {
+    el.textContent = changed.length + ' 个字段指纹变了（' + changed.join('、') +
+      '）—— 这会让 AI 缓存失效、每次扫描重复请求';
+    el.className = 'bad';
+  } else {
+    el.textContent = Object.keys(baselineFps).length + ' 个字段指纹全部一致，缓存可以命中';
+    el.className = 'ok';
+  }
+}
+
+/** 模拟框架最常见的日常动作：聚焦、填写、校验失败 —— 它们都会往元素上加减 class */
+function mutateLikeFramework() {
+  const focused = document.getElementById('v3');
+  focused.classList.add('el-input__inner--focused');
+  focused.closest('.fi').classList.add('form-item--focus');
+
+  const filled = document.getElementById('v2');
+  filled.value = '页面上已经填过的内容';
+  filled.classList.add('el-input__inner--filled');
+  filled.closest('.fi').classList.add('form-item--has-value');
+
+  const bad = document.getElementById('v5');
+  bad.classList.add('el-input__inner--error');
+  const ctl = bad.closest('.ctl');
+  if (!ctl.querySelector('.err-tip')) {
+    const tip = document.createElement('div');
+    tip.className = 'err-tip';
+    tip.textContent = '此项必填';
+    ctl.appendChild(tip);
+  }
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** 这就是 main.js 交给 AI 层的那份数据（不含任何 value） */
+function renderPayload(aiFields) {
+  const payload = aiFields.map((f) => {
+    const entry = window.__RJ_SCANNER__.getEntry(f.id);
+    const el = entry && (entry.el || (entry.group && entry.group[0]));
+    const o = {
+      id: f.id,
+      fingerprint: f.fingerprint,
+      label: f.labelText || '',
+      labelSource: f.labelSource || 'none',
+      placeholder: f.attrs.placeholder || '',
+      htmlName: f.attrs.name || '',
+      type: f.type,
+      options: (f.options || []).map((x) => x.text)
+    };
+    if (el) { try { o.skeleton = window.__RJ_SCANNER__.describeContext(el); } catch (e) { /* ignore */ } }
+    return o;
+  });
+
+  const resolved = lastPlan.filter((p) => p.path).map((p) => ({
+    label: p.label, labelSource: p.field.labelSource, type: p.field.type
+  }));
+
+  $('#payload').textContent = aiFields.length
+    ? JSON.stringify({ resolvedExamples: resolved, fields: payload }, null, 1)
+    : '（本页所有字段都被规则命中了，不需要问模型）';
+}
+
+/* ------------------------------------------------------------------ 填充 */
+async function runFill() {
+  const FILL = window.__RJ_FILLER__;
+  const tb = $('#fres tbody');
+  tb.innerHTML = '';
+
+  const todo = lastPlan.filter((p) => p.path && p.value);
+  if (!todo.length) {
+    tb.innerHTML = '<tr><td colspan="3" class="hint">没有可填的字段</td></tr>';
+    return;
+  }
+
+  const SCAN = window.__RJ_SCANNER__;
+  for (const t of todo) {
+    const tr = document.createElement('tr');
+    // 和扩展的行为保持一致：页面上已经有内容的字段不覆盖
+    if (!SCAN.isEmptyField(t.field)) {
+      tr.innerHTML = '<td>' + esc(t.label) + '</td><td><code>' + esc(t.field.value) + '</code></td>' +
+        '<td><span class="pill warn">页面上已有内容，跳过（不覆盖）</span></td>';
+      tb.appendChild(tr);
+      continue;
+    }
+    const r = await FILL.fillOne({ id: t.id, value: t.value, label: t.label, path: t.path });
+    tr.innerHTML = '<td>' + esc(t.label) + '</td><td><code>' + esc(t.value) + '</code></td>' +
+      '<td>' + (r.ok ? '<span class="pill ok">已填入</span>'
+        : '<span class="pill bad">失败：' + esc(r.error || '') + '</span>') + '</td>';
+    tb.appendChild(tr);
+  }
+
+  // 等一个受控组件的回滚周期，再验证值还在不在
+  setTimeout(() => {
+    const v10 = document.getElementById('v10');
+    const kept = v10 && v10.value === DEMO_RESUME.basic.wechat;
+    $('#rollback').innerHTML = kept
+      ? '<span class="ok">受控组件检查通过</span>：微信号 500ms 后仍是 ' +
+        '<code>' + esc(v10.value) + '</code>，没有被框架回滚。'
+      : '<span class="bad">受控组件被回滚了</span>：期望 ' +
+        '<code>' + esc(DEMO_RESUME.basic.wechat) + '</code>，实际 <code>' +
+        esc(v10 ? v10.value : '(元素不存在)') + '</code>。';
+  }, 500);
+}
+
+/* ------------------------------------------------------------------ 启动 */
+buildForm();
+runScan();
+
+$('#btn-rerun').addEventListener('click', () => {
+  runScan();
+  if (baselineFps && $('#fp-status').className === 'ok') $('#fp-status').textContent += '（重新扫描未变）';
+});
+$('#btn-mutate').addEventListener('click', () => { mutateLikeFramework(); runScan(); });
+$('#btn-fill').addEventListener('click', runFill);
+$('#btn-reset').addEventListener('click', () => {
+  buildForm();
+  baselineFps = null;
+  $('#fres tbody').innerHTML = '<tr><td colspan="3" class="hint">点上面的「执行填充」</td></tr>';
+  $('#rollback').textContent = '';
+  runScan();
+});
+</script>
+</body>
+</html>

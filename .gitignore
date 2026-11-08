@@ -1,0 +1,12 @@
+# 依赖
+node_modules/
+
+# 个人数据 / 运行产物（含隐私信息，不入库）
+/resume.pdf
+/demo-fill-result.png
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

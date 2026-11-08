@@ -1,0 +1,17 @@
+{
+  "name": "resume-jet-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "简历自动投递 Agent 的测试套件：unit（纯 Node）/ ui（无头 Chrome）/ real-site（真实投递页，门禁）",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run-all.js",
+    "test:unit": "node run-all.js --only=unit",
+    "test:ui": "node run-all.js --only=ui",
+    "test:real": "node run-all.js --only=real-site",
+    "deps": "npm install"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

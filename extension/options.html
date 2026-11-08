@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>简历资料 · 简历自动投递助手</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <h1>简历资料</h1>
+      <p class="sub">
+        可管理多份简历，投递时在扩展弹窗里切换使用哪一份。数据仅存储在浏览器本地。
+      </p>
+    </header>
+
+    <section class="card manage">
+      <div class="manage-row">
+        <label class="picker">
+          <span>当前使用简历</span>
+          <select id="resume-select"></select>
+        </label>
+        <div class="manage-actions">
+          <button id="btn-new" class="btn ghost small">新建</button>
+          <button id="btn-dup" class="btn ghost small">复制</button>
+          <button id="btn-rename" class="btn ghost small">重命名</button>
+          <button id="btn-del" class="btn ghost small danger">删除</button>
+        </div>
+      </div>
+
+      <div id="name-editor" class="name-editor" hidden>
+        <input id="name-input" type="text" maxlength="30" placeholder="简历名称，如：后端开发-社招" />
+        <button id="btn-name-ok" class="btn primary small">确定</button>
+        <button id="btn-name-cancel" class="btn ghost small">取消</button>
+      </div>
+
+      <p class="meta" id="resume-meta"></p>
+    </section>
+
+    <!-- ==================== 导入简历文件 ==================== -->
+    <section class="card import">
+      <div class="card-head">
+        <h2>导入简历文件</h2>
+      </div>
+      <div class="import-row">
+        <input type="file" id="import-file" accept=".pdf,.docx,.txt,.md" hidden />
+        <button id="btn-import" class="btn ghost">选择 PDF / DOCX / TXT 文件…</button>
+        <span id="import-status" class="import-status"></span>
+      </div>
+      <p class="meta">
+        解析全部在本地完成，文件不会上传。自动识别结果仅供草稿，请核对后再保存。
+      </p>
+
+      <div id="import-bar" class="import-bar" hidden>
+        <span id="import-bar-text" class="import-bar-text"></span>
+        <div class="import-bar-actions">
+          <button id="btn-import-newsave" class="btn primary small">存为新简历</button>
+          <button id="btn-import-dismiss" class="btn ghost small">知道了</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 基本信息 ==================== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>基本信息</h2>
+        <button id="btn-sample" class="btn ghost small">填入示例数据</button>
+      </div>
+      <div class="grid">
+        <label class="field">
+          <span>姓名</span>
+          <input id="name" type="text" placeholder="张三" />
+        </label>
+        <label class="field">
+          <span>性别</span>
+          <select id="gender">
+            <option value="">未填写</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>出生日期</span>
+          <input id="birthday" type="text" placeholder="1998-06-01" />
+        </label>
+        <label class="field">
+          <span>手机号</span>
+          <input id="phone" type="text" placeholder="13800000000" />
+        </label>
+        <label class="field">
+          <span>电子邮箱</span>
+          <input id="email" type="text" placeholder="zhangsan@example.com" />
+        </label>
+        <label class="field">
+          <span>身份证号</span>
+          <input id="idCard" type="text" placeholder="选填" />
+        </label>
+        <label class="field">
+          <span>现居城市</span>
+          <input id="location" type="text" placeholder="上海" />
+        </label>
+        <label class="field">
+          <span>微信号</span>
+          <input id="wechat" type="text" placeholder="选填" />
+        </label>
+        <label class="field">
+          <span>政治面貌</span>
+          <select id="politicalStatus">
+            <option value="">未填写</option>
+            <option value="中共党员">中共党员</option>
+            <option value="中共预备党员">中共预备党员</option>
+            <option value="共青团员">共青团员</option>
+            <option value="群众">群众</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <!-- ==================== 求职意向 ==================== -->
+    <section class="card" id="card-intent">
+      <div class="card-head">
+        <h2>求职意向</h2>
+      </div>
+      <p class="meta">
+        投递页上「期望…」那一块。之所以和上面的个人信息分开：
+        <strong>「期望工作城市」不等于「现居城市」</strong>，混在一起会把你的居住地填到意向城市上。
+        这些都是选填，留空就不会被填。
+      </p>
+      <div class="grid">
+        <label class="field">
+          <span>期望工作城市</span>
+          <input id="expectedCity" type="text" placeholder="北京" />
+        </label>
+        <label class="field">
+          <span>期望职位</span>
+          <input id="expectedPosition" type="text" placeholder="后端开发工程师" />
+        </label>
+        <label class="field">
+          <span>期望行业</span>
+          <input id="expectedIndustry" type="text" placeholder="互联网" />
+        </label>
+        <label class="field">
+          <span>工作年限</span>
+          <input id="workYears" type="text" placeholder="3 年" />
+        </label>
+        <label class="field">
+          <span>现月薪（税前）</span>
+          <input id="currentSalary" type="text" placeholder="选填" />
+        </label>
+        <label class="field">
+          <span>期望月薪（税前）</span>
+          <input id="expectedSalary" type="text" placeholder="选填" />
+        </label>
+        <label class="field">
+          <span>到岗时间</span>
+          <input id="availableFrom" type="text" placeholder="一个月内" />
+        </label>
+      </div>
+    </section>
+
+    <!-- ==================== 经历（数组） ==================== -->
+    <section class="card" id="card-education">
+      <div class="card-head">
+        <h2>教育经历</h2>
+        <button class="btn ghost small" data-add="education">+ 添加</button>
+      </div>
+      <div class="repeat-list" id="list-education"></div>
+    </section>
+
+    <section class="card" id="card-experience">
+      <div class="card-head">
+        <h2>工作经历</h2>
+        <button class="btn ghost small" data-add="experience">+ 添加</button>
+      </div>
+      <div class="repeat-list" id="list-experience"></div>
+    </section>
+
+    <section class="card" id="card-projects">
+      <div class="card-head">
+        <h2>项目经历</h2>
+        <button class="btn ghost small" data-add="projects">+ 添加</button>
+      </div>
+      <div class="repeat-list" id="list-projects"></div>
+    </section>
+
+    <!-- ==================== 技能与自述 ==================== -->
+    <section class="card">
+      <div class="card-head"><h2>技能与自述</h2></div>
+      <label class="field full">
+        <span>专业技能<span class="tip">多个技能用逗号分隔，例如：Java, Spring Boot, MySQL</span></span>
+        <input id="skills" type="text" placeholder="Java, Spring Boot, MySQL" />
+      </label>
+      <label class="field full">
+        <span>自我评价</span>
+        <textarea id="selfEvaluation" rows="4" placeholder="用于填写「自我评价 / 自我介绍」类文本域"></textarea>
+      </label>
+    </section>
+
+    <!-- ==================== AI 辅助匹配 ==================== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>AI 辅助匹配</h2>
+        <label class="switch">
+          <input type="checkbox" id="ai-enabled" />
+          <span>启用</span>
+        </label>
+      </div>
+      <p class="meta">
+        规则词典没命中的字段，会把这些<strong>输入框的标签和它周边的 DOM 结构</strong>发给你配置的模型来判断。
+        之所以要发结构：很多网站的输入框只有一句 <code>placeholder="请输入"</code>，
+        光看标签模型也无从判断，必须靠它在页面上的层次与邻近文本来推断。
+        <strong>你输入框里已经填的内容、以及简历里的内容（姓名、手机、经历正文等）一个字节都不会发出去</strong>。
+        同一个页面上的字段只会问一次，之后走本地缓存 —— 再次访问这个网站时不再联网。
+      </p>
+      <p class="meta">
+        「测试连接」直接测你填的接口，不经过后台，所以它报的是<strong>接口本身</strong>能不能通；
+        后台是否正常会单独告诉你 —— 投递页上真正跑 AI 兜底时用的是后台。
+      </p>
+      <div class="grid">
+        <label class="field">
+          <span>接口地址（OpenAI 兼容）</span>
+          <input id="ai-baseurl" type="text" placeholder="https://open.bigmodel.cn/api/paas/v4" />
+        </label>
+        <label class="field">
+          <span>模型<span class="tip">建议用 flash 系列，够用且免费。但**先看一眼这个模型的并发上限**：服务商控制台的「当前速率限制」页会逐个模型列出并发数，同一账户里有的模型只有 1~2、有的能到 20~50；选 1~2 的那种，稍有一点重叠就会报 1302（速率限制）</span></span>
+          <input id="ai-model" type="text" placeholder="glm-4.5-flash" />
+        </label>
+        <label class="field full">
+          <span>API Key<span class="tip">只存在你本机浏览器里</span></span>
+          <input id="ai-apikey" type="password" placeholder="sk-..." autocomplete="off" />
+        </label>
+      </div>
+      <div class="ai-actions">
+        <button id="btn-ai-save" class="btn primary small">保存</button>
+        <button id="btn-ai-test" class="btn ghost small">测试连接</button>
+        <button id="btn-ai-clear" class="btn ghost small danger">清空缓存</button>
+        <span id="ai-status" class="import-status"></span>
+      </div>
+    </section>
+
+    <!-- ==================== 缺失要素 ==================== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>常被问到、但简历里还没有</h2>
+        <button id="btn-missing-clear" class="btn ghost small danger">清空记录</button>
+      </div>
+      <p class="meta">投递时表单问了、但当前简历里是空的信息。补齐后下次就自动填了。</p>
+      <div id="missing-list" class="missing-list"></div>
+    </section>
+
+    <footer class="actions">
+      <div class="spacer"></div>
+      <span id="saved" class="saved"></span>
+      <button id="btn-save" class="btn primary">保存资料</button>
+    </footer>
+  </div>
+
+  <!-- pdf.js 加载器：必须是外部文件，MV3 的 CSP 会拦截内联脚本 -->
+  <script type="module" src="shared/pdf-loader.js"></script>
+
+  <script src="shared/profile-store.js"></script>
+  <script src="shared/ai-config.js"></script>
+  <script src="shared/bg-message.js"></script>
+  <!-- ai-map.js 也在这里加载：设置页的「测试连接」直接用它测接口，不绕后台 -->
+  <script src="shared/ai-map.js"></script>
+  <script src="shared/file-text.js"></script>
+  <script src="shared/resume-parser.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

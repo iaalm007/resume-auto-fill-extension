@@ -1,0 +1,55 @@
+{
+  "fields": [
+    {
+      "id": "rj_4",
+      "fingerprint": "fp_vkrxma",
+      "label": "请输入",
+      "labelSource": "placeholder",
+      "placeholder": "请输入",
+      "htmlName": "",
+      "htmlId": "k3",
+      "type": "text",
+      "options": [],
+      "skeleton": [
+        "第0层 <input> 前兄弟[无]",
+        "第1层 <div> 前兄弟[无]",
+        "第2层 <div.control> 前兄弟[无]",
+        "第3层 <div.form-item> 前兄弟[div=\"性别男女\"(含控件) | div=\"手机号码\"(含控件) | div=\"姓名\"(含控件)]"
+      ]
+    },
+    {
+      "id": "rj_5",
+      "fingerprint": "fp_jh3qfu",
+      "label": "请输入",
+      "labelSource": "placeholder",
+      "placeholder": "请输入",
+      "htmlName": "",
+      "htmlId": "k4",
+      "type": "textarea",
+      "options": [],
+      "skeleton": [
+        "第0层 <textarea> 前兄弟[无]",
+        "第1层 <div> 前兄弟[无]",
+        "第2层 <div.control> 前兄弟[无]",
+        "第3层 <div.form-item> 前兄弟[div=\"\"(含控件) | div=\"性别男女\"(含控件) | div=\"手机号码\"(含控件)]"
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "label": "姓名",
+      "labelSource": "sibling(d2)",
+      "type": "text"
+    },
+    {
+      "label": "手机号码",
+      "labelSource": "sibling(d2)",
+      "type": "text"
+    },
+    {
+      "label": "性别",
+      "labelSource": "group",
+      "type": "radio-group"
+    }
+  ]
+}
